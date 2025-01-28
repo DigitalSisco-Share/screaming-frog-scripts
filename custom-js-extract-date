@@ -1,0 +1,41 @@
+// Extract the article publication date
+
+    try {
+        // Helper for getting date values
+        function getDateText(selector, attr) {
+            const el = document.querySelector(selector);
+            if (!el) return null;
+            return attr ? el.getAttribute(attr) : el.textContent.trim();
+        }
+
+        // Places to check for update date, most reliable first
+        const modifiedSelectors = [
+            'meta[property="article:modified_time"]',  // OG modified time
+            'time[datetime][itemprop="dateModified"]', // HTML5 time element
+            '[itemprop="dateModified"]'               // Basic schema markup
+        ];
+
+        // Find first valid update date
+        let updateDate = null;
+        for (const selector of modifiedSelectors) {
+            updateDate = getDateText(selector, 'content') || getDateText(selector);
+            if (updateDate) break;
+        }
+
+        // Fallback: Look for elements with "date" in class/id
+        if (!updateDate) {
+            const possibleDateElements = document.querySelectorAll('[class*="date"], [id*="date"]');
+            for (const el of possibleDateElements) {
+                const text = el.textContent.trim();
+                if (text) {
+                    updateDate = text;
+                    break;
+                }
+            }
+        }
+
+        return seoSpider.data(updateDate || 'No update date found');
+
+    } catch (err) {
+        return seoSpider.error(`Failed to get update date: ${err.message}`);
+    }
