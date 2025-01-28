@@ -1,0 +1,52 @@
+// Extract the article author
+    try {
+        // Helper for getting text content
+        function getText(el, attr) {
+            if (!el) return null;
+            return attr ? el.getAttribute(attr) : el.textContent.trim();
+        }
+
+        // Common places to look for author info
+        const authorLocations = [
+            'meta[name="author"]',
+            '.author',
+            '[itemprop="author"]',
+            '[rel="author"]'
+        ];
+
+        // Try the common locations first
+        let author = null;
+        for (const selector of authorLocations) {
+            const el = document.querySelector(selector);
+            if (el) {
+                author = getText(el, 'content') || getText(el);
+                if (author) break;
+            }
+        }
+
+        // Fallback: Look for any elements with "author" in class/id
+        if (!author) {
+            const possibleAuthorElements = document.querySelectorAll('[class*="author"], [id*="author"]');
+            for (const el of possibleAuthorElements) {
+                const text = el.textContent.trim();
+                if (text) {
+                    author = text;
+                    break;
+                }
+            }
+        }
+
+        // Handle the result
+        const finalAuthor = author || 'Author Not Found';
+        
+        if (typeof seoSpider?.data === 'function') {
+            return seoSpider.data(finalAuthor);
+        }
+        
+        console.error('SEO spider not initialized');
+        return 'Spider unavailable';
+
+    } catch (err) {
+        console.error('Failed to extract author:', err);
+        return seoSpider?.error?.(`Author extraction failed: ${err.message}`);
+    }
