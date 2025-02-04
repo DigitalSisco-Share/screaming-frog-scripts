@@ -1,0 +1,57 @@
+// Extract the top 50 most recurring 3-word phrases on the page
+
+    try {
+        // Helper function to clean and split text into words
+        const getCleanWords = text => {
+            return text
+                .replace(/[^a-zA-Z0-9\s]/g, '') // Remove punctuation
+                .toLowerCase()                 // Convert to lowercase
+                .split(/\s+/)                  // Split by whitespace
+                .filter(word => word.length > 1); // Filter out short words
+        };
+
+        // Helper function to generate 3-grams
+        const generate3Grams = words => {
+            const nGrams = [];
+            for (let i = 0; i < words.length - 2; i++) {
+                nGrams.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
+            }
+            return nGrams;
+        };
+
+        // Count occurrences of phrases
+        const countOccurrences = phrases => {
+            const counts = {};
+            phrases.forEach(phrase => {
+                counts[phrase] = (counts[phrase] || 0) + 1;
+            });
+            return counts;
+        };
+
+        // Sort phrases by frequency
+        const getTopPhrases = (counts, limit) => {
+            return Object.entries(counts)
+                .sort((a, b) => b[1] - a[1]) // Sort by frequency (descending)
+                .slice(0, limit);            // Get top N phrases
+        };
+
+        // Extract visible text content
+        const textContent = document.body.innerText || '';
+
+        // Process the text
+        const words = getCleanWords(textContent);
+        const nGrams = generate3Grams(words);
+        const phraseCounts = countOccurrences(nGrams);
+        const topPhrases = getTopPhrases(phraseCounts, 50);
+
+        // Join the results into a single string
+        const outputString = topPhrases
+            .map(([phrase, count]) => `${phrase} (${count})`)
+            .join(', ');
+
+        // Return the results to Screaming Frog
+        return seoSpider.data(outputString);
+    } catch (error) {
+        // Return error to Screaming Frog
+        return seoSpider.error(`Error extracting 3-grams: ${error.message}`);
+    }
