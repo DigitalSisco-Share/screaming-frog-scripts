@@ -1,0 +1,68 @@
+// Extract the top 100 most recurring single words on the page, ignoring stop words
+
+    try {
+        // List of stop words to ignore
+    const stopWords = new Set([
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 
+    'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 
+    'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 
+    'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 
+    'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 
+    'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 
+    'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but','however','if', 
+    'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 
+    'with', 'about', 'against', 'between', 'into', 'through', 'during', 
+    'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 
+    'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 
+    'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 
+    'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 
+    'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 
+    'than', 'too', 'very', 'can', 'will','would', 'just', 'don', 
+    'should', 'now'
+    ]);
+
+        // Helper function to clean and split text into words
+        const getCleanWords = text => {
+            return text
+                .replace(/[^a-zA-Z0-9\s]/g, '') // Remove punctuation
+                .toLowerCase()                 // Convert to lowercase
+                .split(/\s+/)                  // Split by whitespace
+                .filter(word => word.length > 1 && !stopWords.has(word)); // Remove stop words
+        };
+
+        // Count occurrences of single words
+        const countOccurrences = words => {
+            const counts = {};
+            words.forEach(word => {
+                counts[word] = (counts[word] || 0) + 1;
+            });
+            return counts;
+        };
+
+        // Sort words by frequency
+        const getTopWords = (counts, limit) => {
+            return Object.entries(counts)
+                .sort((a, b) => b[1] - a[1]) // Sort by frequency (descending)
+                .slice(0, limit);            // Get top N words
+        };
+
+        // Extract visible text content
+        const textContent = document.body.innerText || '';
+
+        // Process the text
+        const words = getCleanWords(textContent);
+        const wordCounts = countOccurrences(words);
+        const topWords = getTopWords(wordCounts, 100);
+
+        // Join the results into a single string
+        const outputString = topWords
+            .map(([word, count]) => `${word} (${count})`)
+            .join(', ');
+
+        // Return the results to Screaming Frog
+        return seoSpider.data(outputString);
+    } catch (error) {
+        // Return error to Screaming Frog
+        return seoSpider.error(`Error extracting 1-grams: ${error.message}`);
+    }
+
